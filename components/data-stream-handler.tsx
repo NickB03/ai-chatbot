@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { artifactDefinitions } from './artifact';
 import { initialArtifactData, useArtifact } from '@/hooks/use-artifact';
-import { useDataStream } from './data-stream-provider';
+import { useDataStream } from './vana-data-stream-provider';
 
 export function DataStreamHandler() {
   const { dataStream } = useDataStream();

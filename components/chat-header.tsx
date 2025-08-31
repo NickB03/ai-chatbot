@@ -20,12 +20,20 @@ function PureChatHeader({
   selectedVisibilityType,
   isReadonly,
   session,
+  useVanaBackend,
+  vanaAvailable,
+  isVanaConnected,
+  onToggleVana,
 }: {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   session: Session;
+  useVanaBackend?: boolean;
+  vanaAvailable?: boolean | null;
+  isVanaConnected?: boolean;
+  onToggleVana?: (enabled: boolean) => void;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -69,6 +77,46 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
         />
+      )}
+
+      {/* Vana Backend Toggle */}
+      {!isReadonly && vanaAvailable !== null && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={useVanaBackend ? "default" : "outline"}
+              size="sm"
+              className={`order-1 md:order-3 h-[34px] px-3 ${
+                isVanaConnected 
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : useVanaBackend && vanaAvailable
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
+                  : ''
+              }`}
+              onClick={() => onToggleVana && onToggleVana(!useVanaBackend)}
+              disabled={!vanaAvailable}
+            >
+              <div className={`w-2 h-2 rounded-full mr-2 ${
+                isVanaConnected
+                  ? 'bg-green-300 animate-pulse'
+                  : vanaAvailable
+                  ? 'bg-blue-300'
+                  : 'bg-red-300'
+              }`} />
+              Vana AI
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {vanaAvailable === false 
+              ? 'Vana backend unavailable'
+              : isVanaConnected
+              ? 'Connected to Vana AI with multi-agent support'
+              : useVanaBackend
+              ? 'Using Vana AI backend'
+              : 'Switch to Vana AI for advanced multi-agent features'
+            }
+          </TooltipContent>
+        </Tooltip>
       )}
 
       <Button
