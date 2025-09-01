@@ -101,29 +101,32 @@ export interface VanaSSEEvent {
 
 // Utility functions for ChatMessage
 export function extractMessageContent(message: ChatMessage | ChatMessageCompat): string {
-  // If the message has a direct content property, use it
-  if (message.content && typeof message.content === 'string') {
-    return message.content;
+  // First, check if message has parts array and extract text from it
+  if (message.parts && message.parts.length > 0) {
+    // Find text parts and concatenate them
+    const textParts = message.parts.filter(part => part.type === 'text' && part.text);
+    if (textParts.length > 0) {
+      return textParts.map(part => part.text).join('');
+    }
   }
   
-  // Otherwise, extract from parts
-  if (message.parts && message.parts.length > 0) {
-    const textPart = message.parts.find(part => part.type === 'text');
-    return textPart?.text || '';
+  // Fallback to content property if no parts or no text parts found
+  if (message.content && typeof message.content === 'string') {
+    return message.content;
   }
   
   return '';
 }
 
 export function getMessageCreatedAt(message: ChatMessage | ChatMessageCompat): string {
-  // If the message has a direct createdAt property, use it
-  if (message.createdAt && typeof message.createdAt === 'string') {
-    return message.createdAt;
-  }
-  
-  // Try from metadata
+  // Check metadata.createdAt first (preferred source)
   if (message.metadata?.createdAt) {
     return message.metadata.createdAt;
+  }
+  
+  // Then check direct createdAt property
+  if (message.createdAt && typeof message.createdAt === 'string') {
+    return message.createdAt;
   }
   
   // Fallback to current time

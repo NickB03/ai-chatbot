@@ -17,11 +17,29 @@ interface ChatProps {
 
 // Convert ChatMessage to Message for useVanaChat
 function chatMessageToMessage(chatMessage: ChatMessage): Message {
+  const content = extractMessageContent(chatMessage);
+  const createdAtString = getMessageCreatedAt(chatMessage);
+  
+  // Ensure we have valid content - if empty, provide a fallback
+  const finalContent = content || (chatMessage.content as string) || '';
+  
+  // Parse the date string safely
+  let createdAt: Date;
+  try {
+    createdAt = new Date(createdAtString);
+    // Check if date is valid
+    if (isNaN(createdAt.getTime())) {
+      createdAt = new Date();
+    }
+  } catch {
+    createdAt = new Date();
+  }
+  
   return {
     id: chatMessage.id,
     role: chatMessage.role,
-    content: extractMessageContent(chatMessage),
-    createdAt: new Date(getMessageCreatedAt(chatMessage)),
+    content: finalContent,
+    createdAt,
     attachments: [],
   };
 }
