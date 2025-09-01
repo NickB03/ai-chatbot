@@ -1,150 +1,132 @@
-import { z } from 'zod';
-import type { getWeather } from './ai/tools/get-weather';
-import type { createDocument } from './ai/tools/create-document';
-import type { updateDocument } from './ai/tools/update-document';
-import type { requestSuggestions } from './ai/tools/request-suggestions';
-import type { InferUITool, UIMessage } from 'ai';
+// Essential types for Vana frontend
+// This file provides minimal type definitions to satisfy existing imports
+// without requiring AI SDK compatibility layers
 
-import type { ArtifactKind } from '@/components/artifact';
-import type { Suggestion } from './db/schema';
+// Attachment interface for file uploads
+export interface Attachment {
+  id?: string;
+  name: string;
+  contentType: string;
+  size?: number;
+  url: string;
+}
 
-export type DataPart = { type: 'append-message'; message: string };
+// Re-export ChatMessage with AI SDK compatibility
+export type { ChatMessage } from './types/ai-compat';
 
-export const messageMetadataSchema = z.object({
-  createdAt: z.string(),
-});
+// Stream part types for handling AI SDK stream responses
+export interface TextPart {
+  type: 'text';
+  text: string;
+}
 
-export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
+export interface ToolCallPart {
+  type: 'tool-call';
+  output?: unknown;
+}
 
-type weatherTool = InferUITool<typeof getWeather>;
-type createDocumentTool = InferUITool<ReturnType<typeof createDocument>>;
-type updateDocumentTool = InferUITool<ReturnType<typeof updateDocument>>;
-type requestSuggestionsTool = InferUITool<
-  ReturnType<typeof requestSuggestions>
->;
+export interface ToolResultPart {
+  type: 'tool-result';
+  output?: unknown;
+}
 
-export type ChatTools = {
-  getWeather: weatherTool;
-  createDocument: createDocumentTool;
-  updateDocument: updateDocumentTool;
-  requestSuggestions: requestSuggestionsTool;
-};
+export interface StreamPart {
+  type: string;
+  data?: unknown;
+  output?: unknown;
+  text?: string;
+}
 
-export type CustomUIDataTypes = {
-  textDelta: string;
-  imageDelta: string;
-  sheetDelta: string;
-  codeDelta: string;
-  suggestion: Suggestion;
-  appendMessage: string;
+// Weather location type (defined in weather.tsx)
+// WeatherAtLocation is imported from weather component when needed
+
+// Artifact reference type for stream parts
+export interface ArtifactRef {
   id: string;
   title: string;
-  kind: ArtifactKind;
-  clear: null;
-  finish: null;
-};
-
-// Main ChatMessage type - compatible with AI SDK
-export type ChatMessage = UIMessage<
-  MessageMetadata,
-  CustomUIDataTypes,
-  ChatTools
-> & {
-  content?: string;
-  createdAt?: string;
-};
-
-// Enhanced ChatMessage interface for places that need content/createdAt
-export interface EnhancedChatMessage extends ChatMessage {
-  content: string;
-  createdAt: string;
+  kind: 'text' | 'code' | 'image' | 'sheet';
 }
 
-// Legacy compatibility type
-export type ChatMessageCompat = ChatMessage;
+// Custom UI data types for Vana-specific features
+export interface CustomUIDataTypes {
+  // Text and content deltas
+  textDelta: string;
+  codeDelta: string;
+  imageDelta: string;
+  sheetDelta: string;
 
+  // Message and metadata
+  appendMessage: string;
+  suggestion: any;
 
-export interface Attachment {
-  name: string;
-  url: string;
-  contentType: string;
+  // Document metadata
+  id: string;
+  title: string;
+  kind: string;
+  clear: boolean;
+
+  // Agent and progress tracking
+  agentProgress: {
+    agent_id: string;
+    task_id: string;
+    progress: number;
+    status: 'running' | 'completed' | 'failed';
+    message?: string;
+  };
+
+  // Tool interactions
+  toolCall: {
+    tool_name: string;
+    parameters: any;
+  };
+
+  // Error handling
+  error: {
+    message: string;
+    code?: string;
+  };
+
+  // Index signature to satisfy UIDataTypes constraint
+  [key: string]: unknown;
 }
 
-// Stream provider types for VanaDataStreamContextValue
-export type StreamProvider = 'vercel' | 'vana' | 'hybrid';
-
-// Error types for consistent error handling
-export type KnownError = {
-  message: string;
-  code?: string;
-  status?: number;
-};
-
-// Toast types including warning
-export type ToastType = 'success' | 'error' | 'warning';
-
-// Toast props interface
-export interface ToastProps {
-  id: string | number;
-  type: ToastType;
-  description: string;
+// Chat tools interface
+export interface ChatTools {
+  [key: string]: any;
 }
 
-// Event types for SSE handling
-export interface VanaSSEEvent {
-  type: string;
-  data: any;
-  id?: string;
-  retry?: number;
-  timestamp?: number;
-}
-
-// Utility functions for ChatMessage
-export function extractMessageContent(message: ChatMessage | ChatMessageCompat): string {
-  // First, check if message has parts array and extract text from it
-  if (message.parts && message.parts.length > 0) {
-    // Find text parts and concatenate them
-    const textParts = message.parts.filter(part => part.type === 'text' && part.text);
-    if (textParts.length > 0) {
-      return textParts.map(part => part.text).join('');
-    }
+/**
+ * Extract text content from a ChatMessage
+ * Handles both string content and parts-based content
+ */
+export function extractMessageContent(message: any): string {
+  if (!message) return '';
+  
+  // If content is a string, return it directly
+  if (typeof message.content === 'string') {
+    return message.content;
   }
   
-  // Fallback to content property if no parts or no text parts found
-  if (message.content && typeof message.content === 'string') {
-    return message.content;
+  // If message has parts property, extract text from text parts
+  if (message.parts && Array.isArray(message.parts)) {
+    return message.parts
+      .filter((part: TextPart | StreamPart): part is TextPart => part.type === 'text' && 'text' in part && Boolean(part.text))
+      .map((part: TextPart) => part.text)
+      .join('');
   }
   
   return '';
 }
 
-export function getMessageCreatedAt(message: ChatMessage | ChatMessageCompat): string {
-  // Check metadata.createdAt first (preferred source)
-  if (message.metadata?.createdAt) {
-    return message.metadata.createdAt;
-  }
-  
-  // Then check direct createdAt property
-  if (message.createdAt && typeof message.createdAt === 'string') {
+/**
+ * Get the creation timestamp from a ChatMessage
+ * Returns ISO string format
+ */
+export function getMessageCreatedAt(message: any): string {
+  if (message.createdAt) {
     return message.createdAt;
   }
   
-  // Fallback to current time
+  // Fallback to current timestamp
   return new Date().toISOString();
-}
-
-// Type guard for proper error handling in catch blocks
-export function isError(error: unknown): error is Error {
-  return error instanceof Error;
-}
-
-// Type-safe error handler
-export function handleCatchError(error: unknown): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  if (typeof error === 'string') {
-    return new Error(error);
-  }
-  return new Error('Unknown error occurred');
 }

@@ -444,6 +444,7 @@ export function EnhancedChat({
               
               {lastError && connectionState === 'failed' && (
                 <button
+                  type="button"
                   onClick={async () => {
                     try {
                       await retryConnection();
