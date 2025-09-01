@@ -44,14 +44,104 @@ export type CustomUIDataTypes = {
   finish: null;
 };
 
+// Main ChatMessage type - compatible with AI SDK
 export type ChatMessage = UIMessage<
   MessageMetadata,
   CustomUIDataTypes,
   ChatTools
->;
+> & {
+  content?: string;
+  createdAt?: string;
+};
+
+// Enhanced ChatMessage interface for places that need content/createdAt
+export interface EnhancedChatMessage extends ChatMessage {
+  content: string;
+  createdAt: string;
+}
+
+// Legacy compatibility type
+export type ChatMessageCompat = ChatMessage;
+
 
 export interface Attachment {
   name: string;
   url: string;
   contentType: string;
+}
+
+// Stream provider types for VanaDataStreamContextValue
+export type StreamProvider = 'vercel' | 'vana' | 'hybrid';
+
+// Error types for consistent error handling
+export type KnownError = {
+  message: string;
+  code?: string;
+  status?: number;
+};
+
+// Toast types including warning
+export type ToastType = 'success' | 'error' | 'warning';
+
+// Toast props interface
+export interface ToastProps {
+  id: string | number;
+  type: ToastType;
+  description: string;
+}
+
+// Event types for SSE handling
+export interface VanaSSEEvent {
+  type: string;
+  data: any;
+  id?: string;
+  retry?: number;
+  timestamp?: number;
+}
+
+// Utility functions for ChatMessage
+export function extractMessageContent(message: ChatMessage | ChatMessageCompat): string {
+  // If the message has a direct content property, use it
+  if (message.content && typeof message.content === 'string') {
+    return message.content;
+  }
+  
+  // Otherwise, extract from parts
+  if (message.parts && message.parts.length > 0) {
+    const textPart = message.parts.find(part => part.type === 'text');
+    return textPart?.text || '';
+  }
+  
+  return '';
+}
+
+export function getMessageCreatedAt(message: ChatMessage | ChatMessageCompat): string {
+  // If the message has a direct createdAt property, use it
+  if (message.createdAt && typeof message.createdAt === 'string') {
+    return message.createdAt;
+  }
+  
+  // Try from metadata
+  if (message.metadata?.createdAt) {
+    return message.metadata.createdAt;
+  }
+  
+  // Fallback to current time
+  return new Date().toISOString();
+}
+
+// Type guard for proper error handling in catch blocks
+export function isError(error: unknown): error is Error {
+  return error instanceof Error;
+}
+
+// Type-safe error handler
+export function handleCatchError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  if (typeof error === 'string') {
+    return new Error(error);
+  }
+  return new Error('Unknown error occurred');
 }

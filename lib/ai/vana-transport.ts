@@ -2,6 +2,7 @@
 
 import type { DataUIPart } from 'ai';
 import type { CustomUIDataTypes, ChatMessage } from '@/lib/types';
+import { extractMessageContent, } from '@/lib/types';
 
 export interface VanaStreamEvent {
   type: string;
@@ -40,7 +41,7 @@ export class VanaStreamAdapter {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
 
-  constructor(baseUrl: string = 'http://localhost:8000') {
+  constructor(baseUrl = 'http://localhost:8000') {
     this.baseUrl = baseUrl;
   }
 
@@ -124,7 +125,7 @@ export class VanaStreamAdapter {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message.content,
+          message: extractMessageContent(message),
           message_id: message.id,
           model: options.model || 'gemini-pro',
           metadata: {
@@ -176,8 +177,9 @@ export class VanaStreamAdapter {
 
         } catch (error) {
           console.error('Error parsing Vana SSE event:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to parse SSE event';
           if (options.onError) {
-            options.onError(new Error(`Failed to parse SSE event: ${error.message}`));
+            options.onError(new Error(`Failed to parse SSE event: ${errorMessage}`));
           }
         }
       };

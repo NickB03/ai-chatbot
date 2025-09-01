@@ -23,7 +23,7 @@ export class VanaClient {
     };
     
     if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+      headers.Authorization = `Bearer ${this.token}`;
     }
     
     return headers;
