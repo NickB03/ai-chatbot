@@ -60,15 +60,16 @@ export const imageArtifact = new Artifact({
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0);
           canvas.toBlob((blob) => {
-            if (blob) {
-              navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob }),
-              ]);
+            if (!blob) {
+              toast.error('Failed to copy image: empty blob.');
+              return;
             }
+            navigator.clipboard
+              .write([new ClipboardItem({ 'image/png': blob })])
+              .then(() => toast.success('Copied image to clipboard!'))
+              .catch(() => toast.error('Failed to copy image to clipboard.'));
           }, 'image/png');
         };
-
-        toast.success('Copied image to clipboard!');
       },
     },
   ],

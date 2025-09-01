@@ -10,7 +10,7 @@ import { SpreadsheetEditor } from '@/components/sheet-editor';
 import { parse, unparse } from 'papaparse';
 import { toast } from 'sonner';
 
-type Metadata = any;
+type Metadata = {}
 
 export const sheetArtifact = new Artifact<'sheet', Metadata>({
   kind: 'sheet',
@@ -84,8 +84,10 @@ export const sheetArtifact = new Artifact<'sheet', Metadata>({
 
         const cleanedCsv = unparse(nonEmptyRows);
 
-        navigator.clipboard.writeText(cleanedCsv);
-        toast.success('Copied csv to clipboard!');
+        navigator.clipboard
+          .writeText(cleanedCsv)
+          .then(() => toast.success('Copied csv to clipboard!'))
+          .catch(() => toast.error('Failed to copy csv to clipboard.'));
       },
     },
   ],
