@@ -3,23 +3,17 @@ import { EnhancedChat } from '@/components/enhanced-chat';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { generateUUID } from '@/lib/utils';
 import { DataStreamHandler } from '@/components/data-stream-handler';
-
-// Function to create a fresh Vana session with current timestamp
-function createVanaSession() {
-  return {
-    user: {
-      id: 'vana-user',
-      email: 'user@vana.local',
-      name: 'Vana User',
-      type: 'regular' as const,
-    },
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-  };
-}
+import { auth } from '../(auth)/auth';
+import { redirect } from 'next/navigation';
 
 export default async function VanaPage() {
+  const session = await auth();
+
+  if (!session) {
+    redirect('/api/auth/guest');
+  }
+
   const id = generateUUID();
-  const vanaSession = createVanaSession();
   
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get('chat-model');
@@ -33,7 +27,7 @@ export default async function VanaPage() {
         initialChatModel={modelIdFromCookie?.value || DEFAULT_CHAT_MODEL}
         initialVisibilityType="private"
         isReadonly={false}
-        session={vanaSession}
+        session={session}
         autoResume={false}
         enableVanaIntegration={true}
         vanaOptions={{
