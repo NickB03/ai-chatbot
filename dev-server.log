@@ -1,0 +1,13 @@
+
+> ai-chatbot@3.1.0 dev /Users/nick/Development/vana/frontend
+> next dev --turbo --port 3000 "--port" "3000"
+
+   [1m[38;2;173;127;168m▲ Next.js 15.3.0-canary.31[39m[22m (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://100.66.69.87:3000
+   - Environments: .env.local
+
+ [32m[1m✓[22m[39m Starting...
+ [32m[1m✓[22m[39m Compiled in 340ms
+ [32m[1m✓[22m[39m Ready in 954ms
+[?25h
