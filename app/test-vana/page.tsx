@@ -59,7 +59,6 @@ export default function TestVanaPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Test Actions</h2>
           <button
-            type="button"
             onClick={testConnection}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           >
