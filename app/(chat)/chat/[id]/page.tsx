@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 
 import { auth } from '@/app/(auth)/auth';
-import { Chat } from '@/components/chat';
+import { EnhancedChat } from '@/components/enhanced-chat';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
@@ -45,7 +45,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   if (!chatModelFromCookie) {
     return (
       <>
-        <Chat
+        <EnhancedChat
           id={chat.id}
           initialMessages={uiMessages}
           initialChatModel={DEFAULT_CHAT_MODEL}
@@ -53,6 +53,12 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
           isReadonly={session?.user?.id !== chat.userId}
           session={session}
           autoResume={true}
+          enableVanaIntegration={true}
+          vanaOptions={{
+            agents: ['research', 'analysis', 'synthesis'],
+            model: 'gemini-pro',
+            enableProgress: true,
+          }}
         />
         <DataStreamHandler />
       </>
@@ -61,7 +67,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <Chat
+      <EnhancedChat
         id={chat.id}
         initialMessages={uiMessages}
         initialChatModel={chatModelFromCookie.value}
@@ -69,6 +75,12 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         isReadonly={session?.user?.id !== chat.userId}
         session={session}
         autoResume={true}
+        enableVanaIntegration={true}
+        vanaOptions={{
+          agents: ['research', 'analysis', 'synthesis'],
+          model: 'gemini-pro',
+          enableProgress: true,
+        }}
       />
       <DataStreamHandler />
     </>
